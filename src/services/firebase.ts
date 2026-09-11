@@ -42,45 +42,51 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
 }
 
-function getInitialFirebaseConfig(): FirebaseConfig | null {
+export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
+  apiKey: "AIzaSyBtL8bXIKN-u0N1owyflN8utWZduGH7G0Q",
+  authDomain: "tokyo-venture-6cbh2.firebaseapp.com",
+  projectId: "tokyo-venture-6cbh2",
+  storageBucket: "tokyo-venture-6cbh2.firebasestorage.app",
+  messagingSenderId: "499500772379",
+  appId: "1:499500772379:web:2fc9bb1e1893cbfc25dcbe",
+  firestoreDatabaseId: "ai-studio-gvcn360mini-df98b4db-83bb-4ea2-a2e0-3e6d7d78efb5",
+};
+
+function getInitialFirebaseConfig(): FirebaseConfig {
   // 1. Primary: Load directly from provisioned firebase-applet-config.json
-  if (firebaseConfigJson && firebaseConfigJson.projectId) {
-    return firebaseConfigJson as FirebaseConfig;
+  if (firebaseConfigJson && (firebaseConfigJson as any).projectId) {
+    return {
+      ...DEFAULT_FIREBASE_CONFIG,
+      ...(firebaseConfigJson as FirebaseConfig),
+    };
   }
 
   // 2. Window runtime config
   const windowConfig = (window as unknown as { __FIREBASE_CONFIG__?: FirebaseConfig }).__FIREBASE_CONFIG__;
   if (windowConfig && windowConfig.projectId) {
-    return windowConfig;
-  }
-
-  // 3. Vite env safely
-  const metaEnv = (import.meta as unknown as { env?: Record<string, string> }).env || {};
-  const apiKey = metaEnv.VITE_FIREBASE_API_KEY;
-  const projectId = metaEnv.VITE_FIREBASE_PROJECT_ID;
-  if (projectId && apiKey) {
     return {
-      apiKey,
-      authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
-      projectId,
-      storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
-      messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: metaEnv.VITE_FIREBASE_APP_ID,
+      ...DEFAULT_FIREBASE_CONFIG,
+      ...windowConfig,
     };
   }
 
-  // 4. Saved local config
+  // 3. Saved local config
   try {
     const saved = localStorage.getItem('gvcn360_firebase_config');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed.projectId) return parsed;
+      if (parsed.projectId) {
+        return {
+          ...DEFAULT_FIREBASE_CONFIG,
+          ...parsed,
+        };
+      }
     }
   } catch {
     // Ignore
   }
 
-  return null;
+  return DEFAULT_FIREBASE_CONFIG;
 }
 
 let appInstance: FirebaseApp | null = null;
@@ -93,11 +99,6 @@ export function initFirebase(): { app: FirebaseApp | null; db: Firestore | null 
   }
 
   const config = getInitialFirebaseConfig();
-  if (!config || !config.projectId) {
-    console.info('GVCN 360 MINI: Firebase config not found. Falling back to LocalStorage.');
-    isInitialized = true;
-    return { app: null, db: null };
-  }
 
   try {
     const existingApps = getApps();
@@ -107,9 +108,14 @@ export function initFirebase(): { app: FirebaseApp | null; db: Firestore | null 
       appInstance = initializeApp(config);
     }
     
-    // CRITICAL: Connect with firestoreDatabaseId if provisioned
+    // Connect with firestoreDatabaseId if provisioned, with safe fallback
     if (config.firestoreDatabaseId) {
-      firestoreInstance = getFirestore(appInstance, config.firestoreDatabaseId);
+      try {
+        firestoreInstance = getFirestore(appInstance, config.firestoreDatabaseId);
+      } catch (err) {
+        console.warn('Could not open named database, falling back to default:', err);
+        firestoreInstance = getFirestore(appInstance);
+      }
     } else {
       firestoreInstance = getFirestore(appInstance);
     }
@@ -129,12 +135,23 @@ export function initFirebase(): { app: FirebaseApp | null; db: Firestore | null 
 }
 
 async function testConnection() {
-  if (!firestoreInstance) return;
+  if (!firestoreInstance || !appInstance) return;
   try {
     await getDocFromServer(doc(firestoreInstance, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration or network status.');
+    // If connection to named database failed, attempt fallback to default database
+    const config = getInitialFirebaseConfig();
+    if (config.firestoreDatabaseId) {
+      try {
+        const defaultDb = getFirestore(appInstance);
+        await getDocFromServer(doc(defaultDb, 'test', 'connection'));
+        firestoreInstance = defaultDb;
+        console.info('GVCN 360 MINI: Successfully fell back to default Firestore database.');
+      } catch (errDefault) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error('Please check your Firebase configuration or network status.');
+        }
+      }
     }
   }
 }
