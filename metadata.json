@@ -1,0 +1,6 @@
+{
+  "name": "GVCN 360 Mini",
+  "description": "Hệ thống quản lý lớp học và sổ liên lạc điện tử cho Giáo viên chủ nhiệm",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

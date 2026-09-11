@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "Student": {
+      "title": "Student",
+      "description": "Student record in class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "fullName": { "type": "string" },
+        "gender": { "type": "string" },
+        "dob": { "type": "string" },
+        "parentPhone": { "type": "string" },
+        "parentName": { "type": "string" },
+        "address": { "type": "string" },
+        "isBoarding": { "type": "boolean" },
+        "usesBus": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "fullName", "gender", "isBoarding", "usesBus"]
+    },
+    "ClassSettings": {
+      "title": "ClassSettings",
+      "description": "Class configuration and homeroom teacher information",
+      "type": "object",
+      "properties": {
+        "schoolName": { "type": "string" },
+        "className": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "teacherPhone": { "type": "string" },
+        "teacherEmail": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["className", "teacherName"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily attendance status per student and session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "date": { "type": "string" },
+        "session": { "type": "string", "enum": ["morning", "afternoon"] },
+        "status": { "type": "string", "enum": ["present", "excused", "unexcused", "late"] },
+        "reason": { "type": "string" },
+        "recordedAt": { "type": "string" }
+      },
+      "required": ["id", "studentId", "date", "session", "status"]
+    },
+    "AssessmentBatch": {
+      "title": "AssessmentBatch",
+      "description": "Assessment exam period and subjects",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "semester": { "type": "string" },
+        "subjects": { "type": "array" },
+        "date": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "semester", "subjects"]
+    },
+    "AssessmentScore": {
+      "title": "AssessmentScore",
+      "description": "Individual subject score for a student in a batch",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "batchId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "subject": { "type": "string" },
+        "score": { "type": "number" },
+        "rawScore": { "type": "string" },
+        "comment": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "batchId", "studentId", "subject"]
+    },
+    "AssessmentImportLog": {
+      "title": "AssessmentImportLog",
+      "description": "Audit log for assessment score excel imports",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "batchId": { "type": "string" },
+        "fileName": { "type": "string" },
+        "importedAt": { "type": "string" },
+        "matchedCount": { "type": "number" },
+        "needCheckCount": { "type": "number" },
+        "unmatchedCount": { "type": "number" },
+        "missingCount": { "type": "number" }
+      },
+      "required": ["id", "batchId", "fileName", "importedAt"]
+    },
+    "ViolationRecord": {
+      "title": "ViolationRecord",
+      "description": "Student disciplinary violation or conduct note",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "session": { "type": "string" },
+        "pointsDeducted": { "type": "number" },
+        "isPublic": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "studentId", "title", "date", "pointsDeducted", "isPublic"]
+    },
+    "ViolationTemplate": {
+      "title": "ViolationTemplate",
+      "description": "Pre-configured violation suggestion template",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "defaultPoints": { "type": "number" },
+        "category": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "title", "defaultPoints", "category", "order"]
+    },
+    "CompetitionTransaction": {
+      "title": "CompetitionTransaction",
+      "description": "Class emulation point adjustments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "type": { "type": "string", "enum": ["plus", "minus"] },
+        "points": { "type": "number" },
+        "month": { "type": "string" },
+        "content": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "type", "points", "month", "content"]
+    },
+    "ParentToken": {
+      "title": "ParentToken",
+      "description": "Access token for parent student portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "token": { "type": "string" },
+        "studentId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "revoked"] },
+        "teacherNote": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "revokedAt": { "type": "string" }
+      },
+      "required": ["token", "studentId", "status"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Collection of students in homeroom class"
+    },
+    "/class_settings/{settingId}": {
+      "schema": "ClassSettings",
+      "description": "Class and homeroom teacher settings"
+    },
+    "/attendance/{recordId}": {
+      "schema": "AttendanceRecord",
+      "description": "Attendance history records"
+    },
+    "/assessment_batches/{batchId}": {
+      "schema": "AssessmentBatch",
+      "description": "Assessment periods"
+    },
+    "/assessment_scores/{scoreId}": {
+      "schema": "AssessmentScore",
+      "description": "Student test scores by batch and subject"
+    },
+    "/assessment_logs/{logId}": {
+      "schema": "AssessmentImportLog",
+      "description": "Logs of assessment score imports"
+    },
+    "/violations/{violationId}": {
+      "schema": "ViolationRecord",
+      "description": "Student discipline records"
+    },
+    "/violation_templates/{templateId}": {
+      "schema": "ViolationTemplate",
+      "description": "Reusable violation templates"
+    },
+    "/competition/{txId}": {
+      "schema": "CompetitionTransaction",
+      "description": "Monthly emulation score logs"
+    },
+    "/parent_tokens/{tokenId}": {
+      "schema": "ParentToken",
+      "description": "Access tokens for parent portal"
+    }
+  }
+}

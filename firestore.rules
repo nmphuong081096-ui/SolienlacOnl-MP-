@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Class Info / Settings: Anyone can read class public info; writes permitted
+    match /class_settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Students list
+    match /students/{studentId} {
+      allow read, write: if isValidId(studentId);
+    }
+
+    // Attendance records
+    match /attendance/{recordId} {
+      allow read, write: if isValidId(recordId);
+    }
+
+    // Assessment Batches
+    match /assessment_batches/{batchId} {
+      allow read: if true;
+      allow write: if isValidId(batchId);
+    }
+
+    // Assessment Scores
+    match /assessment_scores/{scoreId} {
+      allow read, write: if isValidId(scoreId);
+    }
+
+    // Assessment Import Logs
+    match /assessment_logs/{logId} {
+      allow read, write: if isValidId(logId);
+    }
+
+    // Violations: public violations can be read by parent with token, all can be written
+    match /violations/{violationId} {
+      allow read, write: if isValidId(violationId);
+    }
+
+    // Violation templates
+    match /violation_templates/{templateId} {
+      allow read, write: if isValidId(templateId);
+    }
+
+    // Competition transactions
+    match /competition/{txId} {
+      allow read, write: if isValidId(txId);
+    }
+
+    // Parent portal tokens
+    match /parent_tokens/{tokenId} {
+      allow read, write: if isValidId(tokenId);
+    }
+  }
+}
